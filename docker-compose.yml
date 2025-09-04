@@ -1,0 +1,15 @@
+
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: hotel_reservation
+    ports:
+      - "5432:5432"
+    volumes:
+      - hotel_db_data:/var/lib/postgresql/data
+
+volumes:
+  hotel_db_data:
