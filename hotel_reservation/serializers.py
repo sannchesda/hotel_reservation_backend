@@ -1,6 +1,11 @@
 from rest_framework import serializers
 from django.db import transaction, IntegrityError
-from .models import Booking, Room, Guest, Payment
+from .models import Booking, Room, Guest, Payment, Amenity
+
+class AmenitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Amenity
+        fields = ['id', 'name']
 
 class GuestInput(serializers.Serializer):
     full_name = serializers.CharField()
@@ -8,6 +13,8 @@ class GuestInput(serializers.Serializer):
     phone = serializers.CharField(allow_blank=True, required=False)
 
 class RoomSerializer(serializers.ModelSerializer):
+    amenities = AmenitySerializer(many=True, read_only=True)
+    
     class Meta:
         model = Room
         fields = '__all__'
@@ -29,6 +36,13 @@ class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = '__all__'
+        
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['total_dollar'] = instance.total_cents / 100.0
+        if hasattr(instance, 'payment'):
+            data['payment_status'] = instance.payment.status
+        return data
 
     def validate(self, data):
         if data['check_out'] <= data['check_in']:

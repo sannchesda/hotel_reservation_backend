@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-i9u!+l3bueui8dw)wa+o++)tk9cxjj-osz8w=f8tce^8v-yht1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 
 # Application definition
@@ -37,10 +37,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'corsheaders',
     'hotel_reservation',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -77,11 +80,11 @@ WSGI_APPLICATION = 'hotel_reservation_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'hotel_reservation',        # your database name
-        'USER': 'admin',   # your postgres user
+        'NAME': 'hotel_reservation',
+        'USER': 'admin',
         'PASSWORD': 'password',
-        'HOST': 'localhost',       # or an IP / domain
-        'PORT': '5432',            # default Postgres port
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
@@ -126,3 +129,25 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# REST Framework configuration
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+    ],
+}
+
+# CORS settings for frontend communication
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Vite dev server
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",  # Alternative frontend port
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+# Allow all origins in development (remove in production)
+CORS_ALLOW_ALL_ORIGINS = True
