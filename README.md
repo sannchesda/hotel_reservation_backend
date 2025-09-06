@@ -41,7 +41,7 @@ hotel_reservation_project/
 │   │   └── management/commands/        # Custom commands
 │   ├── hotel_reservation_backend/      # Project settings
 │   ├── requirements.txt                # Python dependencies
-│   ├── docker-compose.yml              # Database setup
+│   ├── docker-compose.yml              # Local Database setup
 │   └── Dockerfile                      # Backend containerization
 │
 ├── hotel_reservation_frontend/         # Vue.js application
@@ -165,23 +165,9 @@ hotel_reservation_project/
 
 ### Prerequisites
 - Python 3.9+
-- Node.js 16+
+- Node.js 20+
 - Docker & Docker Compose
 - PostgreSQL (or use Docker setup)
-
-### Quick Start
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd hotel_reservation_project
-   ```
-
-2. **Run the setup script**
-   ```bash
-   chmod +x run.sh
-   ./run.sh
-   ```
 
 ### Manual Setup
 
@@ -189,7 +175,7 @@ hotel_reservation_project/
 ```bash
 cd hotel_reservation_backend
 
-# Start PostgreSQL with Docker
+# Set up Local DB
 docker-compose up -d
 
 # Install dependencies (no virtual environment as requested)

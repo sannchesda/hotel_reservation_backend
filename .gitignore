@@ -1,3 +1,6 @@
+# Environment variables
+.env
+
 # Django #
 *.log
 *.pot
@@ -136,3 +139,7 @@ GitHub.sublime-settings
 !.vscode/launch.json 
 !.vscode/extensions.json 
 .history
+
+.env.dev
+.env.prod
+.env.local

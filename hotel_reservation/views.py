@@ -85,9 +85,12 @@ class BookingViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def update(self, request, pk=None, **kwargs):
-        """Cancel a booking"""
+        """Update a booking - full access for staff, limited access for guests"""
         try:
             booking = self.get_object()
+            user_type = request.data.get('user_type', 'guest')  # Default to guest if not specified
+            
+            # Handle cancellation (allowed for both staff and guests)
             if 'status' in request.data and request.data['status'] == 'CANCELLED':
                 booking.status = Booking.Status.CANCELLED
                 booking.save()
@@ -99,9 +102,23 @@ class BookingViewSet(viewsets.ModelViewSet):
                 
                 serializer = self.get_serializer(booking)
                 return Response(serializer.data)
+            
+        
+            # Staff can edit any booking information
+            if user_type == 'staff':
+                # Use serializer to handle full updates including guest info
+                serializer = self.get_serializer(booking, data=request.data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data)
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Guests can only cancel bookings (already handled above)
             else:
-                return Response({'error': 'Only cancellation is allowed'}, 
+                return Response({'error': 'Only cancellation is allowed for guests'}, 
                                 status=status.HTTP_400_BAD_REQUEST)
+                
         except Booking.DoesNotExist:
             return Response({'error': 'Booking not found'}, 
                             status=status.HTTP_404_NOT_FOUND)
