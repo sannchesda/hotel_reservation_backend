@@ -9,6 +9,9 @@ from rest_framework.response import Response
 from datetime import datetime, date
 import uuid
 
+def welcome(request):
+    return JsonResponse({"message": "Welcome to the Hotel Reservation System"})
+
 def health_check(request):
     return JsonResponse({"status": "ok"})
 
