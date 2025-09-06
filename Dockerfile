@@ -25,9 +25,6 @@ COPY . /app/
 RUN python manage.py migrate
 RUN python manage.py populate_db
 
-# Collect static files (if needed)
-RUN python manage.py collectstatic --noinput
-
 # Run server
 EXPOSE 8000
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
