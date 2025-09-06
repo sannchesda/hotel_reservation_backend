@@ -2,6 +2,10 @@
 
 A comprehensive hotel reservation system built with Django REST Framework backend and Vue.js frontend, designed for both guest and staff interactions.
 
+## Demo Project
+
+https://hotelreservationfrontend-production.up.railway.app/
+
 ## Architecture Overview
 
 ### System Components
