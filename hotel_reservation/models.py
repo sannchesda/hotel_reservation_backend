@@ -1,16 +1,12 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 
-class Amenity(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-
 class Room(models.Model):
     number = models.CharField(max_length=20, unique=True)
-    room_type = models.CharField(max_length=50)
+    room_type = models.CharField(max_length=50, blank=True)
     price_cents = models.PositiveIntegerField(validators=[MinValueValidator(0)])
     capacity = models.PositiveIntegerField(default=1)
     description = models.TextField(blank=True)
-    amenities = models.ManyToManyField(Amenity, related_name="rooms", blank=True)
 
 class Guest(models.Model):
     full_name = models.CharField(max_length=150)
@@ -19,6 +15,7 @@ class Guest(models.Model):
 
 class Booking(models.Model):
     class Status(models.TextChoices):
+        PENDING = "PENDING"
         CONFIRMED = "CONFIRMED"
         CANCELLED = "CANCELLED"
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="bookings")
@@ -26,7 +23,7 @@ class Booking(models.Model):
     check_in = models.DateField()
     check_out = models.DateField()  # exclusive
     total_cents = models.PositiveIntegerField()
-    status = models.CharField(max_length=10, choices=Status.choices, default=Status.CONFIRMED)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
 
 class Payment(models.Model):

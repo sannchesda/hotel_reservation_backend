@@ -12,11 +12,11 @@ import uuid
 def health_check(request):
     return JsonResponse({"status": "ok"})
 
-def available_rooms_qs(check_in, check_out, max_price=None, amenity_names=None):
+def available_rooms_qs(check_in, check_out, max_price=None):
     overlap = Exists(
         Booking.objects.filter(
             room=OuterRef('pk'),
-            status=Booking.Status.CONFIRMED,
+            status__in=[Booking.Status.CONFIRMED, Booking.Status.PENDING],
             check_in__lt=check_out,
             check_out__gt=check_in,
         )
@@ -24,8 +24,6 @@ def available_rooms_qs(check_in, check_out, max_price=None, amenity_names=None):
     qs = Room.objects.annotate(has_overlap=overlap).filter(has_overlap=False)
     if max_price is not None:
         qs = qs.filter(price_cents__lte=max_price)
-    if amenity_names:
-        qs = qs.filter(amenities__name__in=amenity_names).distinct()
     return qs
 
 class RoomViewSet(viewsets.ModelViewSet):
@@ -37,7 +35,6 @@ class RoomViewSet(viewsets.ModelViewSet):
         check_in_str = request.query_params.get('check_in')
         check_out_str = request.query_params.get('check_out')
         max_price = request.query_params.get('max_price')
-        amenities = request.query_params.get('amenities')
         
         if check_in_str and check_out_str:
             try:
@@ -46,8 +43,7 @@ class RoomViewSet(viewsets.ModelViewSet):
                 
                 # Get available rooms for the date range
                 rooms = available_rooms_qs(check_in, check_out, 
-                                         int(max_price) * 100 if max_price else None,
-                                         amenities.split(',') if amenities else None)
+                                         int(max_price) * 100 if max_price else None)
             except ValueError:
                 return Response({'error': 'Invalid date format. Use YYYY-MM-DD'}, 
                               status=status.HTTP_400_BAD_REQUEST)
@@ -61,6 +57,32 @@ class RoomViewSet(viewsets.ModelViewSet):
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
+
+    @action(detail=False, methods=['get'])
+    def by_email(self, request):
+        """Get bookings by guest email"""
+        email = request.query_params.get('email')
+        if not email:
+            return Response({'error': 'Email parameter is required'}, 
+                          status=status.HTTP_400_BAD_REQUEST)
+        
+        bookings = Booking.objects.filter(guest__email=email).order_by('-created_at')
+        serializer = self.get_serializer(bookings, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def my_bookings(self, request):
+        """Get current user's bookings (simulated authentication)"""
+        # In a real app, this would use request.user
+        # For simulation, we get email from query params or session
+        email = request.query_params.get('user_email')
+        if not email:
+            return Response({'error': 'User not authenticated'}, 
+                            status=status.HTTP_401_UNAUTHORIZED)
+        
+        bookings = Booking.objects.filter(guest__email=email).order_by('-created_at')
+        serializer = self.get_serializer(bookings, many=True)
+        return Response(serializer.data)
 
     def update(self, request, pk=None, **kwargs):
         """Cancel a booking"""
@@ -79,10 +101,10 @@ class BookingViewSet(viewsets.ModelViewSet):
                 return Response(serializer.data)
             else:
                 return Response({'error': 'Only cancellation is allowed'}, 
-                              status=status.HTTP_400_BAD_REQUEST)
+                                status=status.HTTP_400_BAD_REQUEST)
         except Booking.DoesNotExist:
             return Response({'error': 'Booking not found'}, 
-                          status=status.HTTP_404_NOT_FOUND)
+                            status=status.HTTP_404_NOT_FOUND)
 
     def partial_update(self, request, pk=None, **kwargs):
         """Handle partial updates (PATCH requests)"""
@@ -101,6 +123,9 @@ class BookingViewSet(viewsets.ModelViewSet):
                 if success:
                     payment.status = Payment.Status.PAID
                     payment.provider_ref = request.data.get('provider_ref', str(uuid.uuid4()))
+                    # Update booking status to CONFIRMED when payment is successful
+                    booking.status = Booking.Status.CONFIRMED
+                    booking.save()
                 else:
                     payment.status = Payment.Status.FAILED
                 

@@ -1,11 +1,6 @@
 from rest_framework import serializers
 from django.db import transaction, IntegrityError
-from .models import Booking, Room, Guest, Payment, Amenity
-
-class AmenitySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Amenity
-        fields = ['id', 'name']
+from .models import Booking, Room, Guest, Payment
 
 class GuestInput(serializers.Serializer):
     full_name = serializers.CharField()
@@ -13,7 +8,6 @@ class GuestInput(serializers.Serializer):
     phone = serializers.CharField(allow_blank=True, required=False)
 
 class RoomSerializer(serializers.ModelSerializer):
-    amenities = AmenitySerializer(many=True, read_only=True)
     
     class Meta:
         model = Room
@@ -52,11 +46,16 @@ class BookingSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated):
-        
+        # Idempotency: check if booking with same client_token already exists
+        client_token_str = str(validated['client_token'])
+        existing_payment = Payment.objects.filter(provider_ref=client_token_str).first()
+        if existing_payment:
+            return existing_payment.booking
+
         # Check room availability
         overlapping = Booking.objects.filter(
             room_id=validated['room_id'],
-            status=Booking.Status.CONFIRMED,
+            status__in=[Booking.Status.CONFIRMED, Booking.Status.PENDING],
             check_in__lt=validated['check_out'],
             check_out__gt=validated['check_in'],
         ).exists()
@@ -73,16 +72,16 @@ class BookingSerializer(serializers.ModelSerializer):
         nights = (validated['check_out'] - validated['check_in']).days
         total_cents = room.price_cents * nights
 
-        # Idempotency: ensure the same client_token gets the same booking
+        # Create booking with payment atomically
         with transaction.atomic():
             booking = Booking.objects.create(
                 room=room, guest=guest,
                 check_in=validated['check_in'], check_out=validated['check_out'],
-                total_cents=total_cents, status=Booking.Status.CONFIRMED
+                total_cents=total_cents, status=Booking.Status.PENDING
             )
             Payment.objects.create(booking=booking, amount_cents=total_cents,
                                    status=Payment.Status.PENDING,
-                                   provider_ref=str(validated['client_token']))
+                                   provider_ref=client_token_str)
         return booking
     
 
