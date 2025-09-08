@@ -1,6 +1,6 @@
 # Hotel Reservation System
 
-A comprehensive hotel reservation system built with Django REST Framework backend and Vue.js frontend, designed for both guest and staff interactions.
+A simple project of Hotel Reservation System using Django, VueJs, and PostgreSQL
 
 ## Demo Project
 
@@ -15,20 +15,18 @@ The Hotel Reservation System follows a three-tier architecture:
 **Frontend Layer (Vue.js)**
 - Guest Portal for room booking and management
 - Staff Portal for administrative tasks
-- Responsive web interface with TypeScript
 - Real-time communication with backend via REST API
 
 **Backend Layer (Django REST Framework)**
-- RESTful API endpoints for all operations
 - Business logic and data validation
 - Room, booking, guest, and payment management
 - CORS-enabled for frontend integration
+- Prevent race condition and booking conflict on App and Database level
 
 **Database Layer (PostgreSQL)**
 - Persistent data storage for all entities
 - Relational data model with proper constraints
 - Stores rooms, guests, bookings, and payment records
-- Optimized for concurrent access and data integrity
 
 The frontend communicates with the backend through HTTP requests, while the backend manages all database operations and business rules.
 
@@ -91,7 +89,6 @@ hotel_reservation_project/
 ```python
 - id: Primary key
 - number: Unique room identifier
-- room_type: Optional room category (Standard, Deluxe, Suite, etc.)
 - price_cents: Price per night in cents
 - capacity: Maximum guest capacity
 - description: Room description
@@ -126,22 +123,6 @@ hotel_reservation_project/
 - provider_ref: Payment provider reference
 - created_at: Payment creation timestamp
 ```
-
-## API Endpoints
-
-### Rooms
-- `GET /api/rooms/` - List available rooms with date/price filtering
-- `POST /api/rooms/` - Create new room (staff only)
-- `PUT /api/rooms/{id}/` - Update room (staff only)
-- `DELETE /api/rooms/{id}/` - Delete room (staff only)
-
-### Bookings
-- `GET /api/bookings/` - List all bookings (staff only)
-- `POST /api/bookings/` - Create new booking
-- `GET /api/bookings/{id}/` - Get booking details
-- `PATCH /api/bookings/{id}/` - Update booking status
-- `GET /api/bookings/by_email/` - Get bookings by email
-- `POST /api/bookings/{id}/confirm_payment/` - Process payment
 
 ## Technology Stack
 
@@ -205,32 +186,3 @@ npm install
 # Start development server
 npm run dev
 ```
-
-## Key Design Decisions
-
-### 1. **No Authentication Required**
-- Simplified development by using simulated authentication
-- Guest identification through email-based lookups
-- Staff access through dedicated routes
-
-### 2. **Optional Room Types**
-- Made room_type field optional for flexibility
-- Frontend gracefully handles empty room types
-- Allows hotels to manage rooms without rigid categorization
-
-### 3. **Booking Status Simplification**
-- Removed CHECK_IN/CHECK_OUT statuses as requested
-- Focuses on core reservation states: PENDING, CONFIRMED, CANCELLED
-- Simplifies workflow for both guests and staff
-
-### 4. **Staff Workflow Optimization**
-- Removed booking deletion to prevent data loss
-- Enabled free-text guest information entry
-- Streamlined booking management interface
-
-### 5. **Guest Experience Enhancement**
-- View Booking button routes to dedicated My Bookings page
-- Integrated payment simulation
-- Responsive design for mobile compatibility
-
-
