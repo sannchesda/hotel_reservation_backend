@@ -164,7 +164,7 @@ cd hotel_reservation_backend
 docker-compose up -d
 
 # Install dependencies (no virtual environment as requested)
-pip3 install -r requirements.txt
+pip3 install -r requirements.txt (--user)
 
 # Run migrations
 python3 manage.py migrate

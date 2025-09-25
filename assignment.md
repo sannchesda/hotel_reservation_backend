@@ -71,10 +71,3 @@ Kindly utilize GitHub for project submission.
 - Documentation (README, architecture diagram).
 - Tests for backend and frontend.
 """
-
-# Save the content as .md file
-output_path = "/mnt/data/hotel_reservation_system.md"
-with open(output_path, "w") as f:
-    f.write(markdown_content)
-
-output_path
